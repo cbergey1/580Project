@@ -1,0 +1,74 @@
+.navbar .navbar-toggle .icon-bar {
+    background-color: white !important;
+}
+.navbar-left{
+	padding-left: 5px;
+}
+.navbar-toggle{
+	background-color: #2b2b2b !important;
+}
+.navbar-toggle span{
+	color: white !important;
+}
+.navbar-left{
+	width:300px;
+	padding-left: 70px;
+}
+.navbar-right{
+	padding-right: 70px;
+}
+.navbar-left>img{
+	height: 70px;
+	width:auto;
+	padding-top: 10px;
+}
+.nav>li>a:hover, .nav>li>a:focus, .nav>li>a:active{
+    background-color: transparent !important;
+}
+.nav .dropdown-toggle{
+	background-color: transparent !important;
+}
+.navbar-nav > li > .dropdown-menu { 
+	background-color: rgba(66, 139, 202, 1);
+	margin-top: 10px;
+
+}
+.navbar-nav > li > .dropdown-menu a{
+	color: #fcfcfc;
+}
+.navbar-nav > li > .dropdown-menu a:hover{
+	color: #2b2b2b;
+}
+.nav .active{
+	background-color: rgba(66, 139, 202, 1);
+}
+.navbutton:focus{
+	outline:0;
+}
+.navbar{
+	min-height: 90px;
+	color: white;
+	font-size: 14px;
+    background-image: linear-gradient(to bottom, #337ab7 0%, #265a88 100%);
+    border-width: 0px;
+    border-radius: 0px;
+    
+}
+.navbar a{
+	color: #fcfcfc;
+}
+.navbar a:hover{
+	color: #2b2b2b;
+}
+#loggedincollapse, #navbarcollapse{
+	background-color: transparent !important;
+	border: 2px solid white;
+	margin-top: 15px;
+	margin-right: 15px;
+}
+ul .dropdown-menu li a {
+  color: #a6a6a6;
+}
+ul .dropdown-menu li{
+	height: 35px;
+}
