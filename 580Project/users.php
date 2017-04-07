@@ -10,6 +10,35 @@ $path_components = explode('/', $_SERVER['PATH_INFO']);
 ==========================================
 */
 if ($_SERVER['REQUEST_METHOD'] == "GET") {
+	$response = array();
+	if(count($path_components) == 2 && $path_components[1]=="login"){
+		
+	}else if(count($path_components) == 2 && $path_components[1]=="points"){
+		if(!isset($_SESSION['user_id'])){
+			$response['success'] = false;
+			$response['message'] = "User not logged in";
+			echo json_encode($response); 
+			exit();
+		}else{
+			$userObject = getUserById($_SESSION['user_id']);
+			$response['success'] = true;
+			$response['message'] = $userObject->getPoints();
+			echo json_encode($response); 
+			exit();
+		}
+	}else if(count($path_components) == 2 && $path_components[1]=="pointsinc"){
+		if(!isset($_SESSION['user_id'])){
+			$response['success'] = false;
+			$response['message'] = "User not logged in";
+			echo json_encode($response); 
+			exit();
+		}else{
+			$userObject = Users::getUserById($_SESSION['user_id']);
+			$response['success'] = true;
+			$userObject->incrementPoints();
+			exit();
+		}
+	}
 
 }
 /*
@@ -18,6 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
 ==========================================
 */
 else if ($_SERVER['REQUEST_METHOD'] == "POST") {
+	$response = array();
 	if(count($path_components) == 2 && $path_components[1]=="login"){
 		if(empty($_POST) === false){
 			$username = $_POST['username'];
@@ -47,6 +77,35 @@ else if ($_SERVER['REQUEST_METHOD'] == "POST") {
 			$response['message'] = "Failure.";
 			echo json_encode($response); 
 			exit();
+		}
+	}else if(count($path_components) == 2 && $path_components[1]=="register"){
+		if($_POST['password'] != $_POST['confirmpassword']){
+			$response['message'] = "Passwords do not match";
+			echo json_encode($response); 
+			exit();
+		}else if(Users::user_exists($_POST['username'])){
+			$response['message'] = "Username is already taken";
+			echo json_encode($response); 
+			exit();
+		}else{
+			$result = Users::registerUser($_POST['username'], $_POST['password']);
+			if($result == true){
+				$response['message'] = "Success.";
+				echo json_encode($response); 
+			exit();
+			}else{
+				$response['message'] = "Failure";
+				echo json_encode($response); 
+				exit();
+			}
+		}
+	}
+	if(count($path_components) == 2 && $path_components[1] == "logout"){
+		if(empty($_POST) == false){
+			$username = $_POST['username'];
+			$password = $_POST['password'];
+			$response = array();
+			
 		}
 	}
 }
