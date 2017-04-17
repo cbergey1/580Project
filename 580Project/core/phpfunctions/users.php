@@ -4,13 +4,16 @@
 		private $id;
 		private $password;
 		private $username;
-		private $points;
+		private $studentid;
+		private $teacherid;
 
-		public function __construct($id, $password, $username, $points) {
+		public function __construct($id, $password, $username, $studentid, $teacherid) {
 		    $this->id = $id;
 		    $this->password = $password;
 		    $this->username = $username;
-		    $this->points = $points;
+		    $this->studentid = $studentid;
+		    $this->teacherid = $teacherid;
+		    
 	  	}
 
 		public static function user_exists($username){
@@ -29,15 +32,32 @@
 				return false;
 			}
 		}
-		public static function registerUser($username, $password){
+		public static function registerUser($username, $password, $accounttype, $accesscode){
 			$conn = db_connect();
 
 			$username = sanitize($conn, $username);
 			$password = sanitize($conn, $password);
+			$accounttype = sanitize($conn, $accounttype);
+			$accesscode = sanitize($conn, $accesscode);
 
-			$q = "INSERT INTO Users (id, username, password, points) VALUES (NULL, '$username', '$password', 0);";
-			$result = $conn->query($q);
-			return $result;
+			if($accounttype == "student"){
+				$teacher = Teacher::getIdByAccessCode($accesscode);
+				$studentid = Student::registerStudent($teacher->getId());
+
+				$q = "INSERT INTO Users (id, username, password, studentid, teacherid) VALUES (NULL, '$username', '$password', '$studentid', 0);";
+				$result = $conn->query($q);
+				return $result;
+			}else if($accounttype == "teacher"){
+
+				$teacherid = Teacher::registerTeacher();
+
+				$q = "INSERT INTO Users (id, username, password, studentid, teacherid) VALUES (NULL, '$username', '$password', 0, '$teacherid');";
+				$result = $conn->query($q);
+				return $result;
+			}else{
+				return false;
+			}
+			
 		}
 		public static function getUserById($id){
 			$conn = db_connect();
@@ -47,12 +67,12 @@
 	  		$result = $conn->query($q);
 	  		$data = $result->fetch_assoc();
 
-	  		return new Users($data['id'], $data['username'], $data['password'], $data['points']);
+	  		return new Users($data['id'], $data['username'], $data['password'], $data['studentid'], $data['studentid']);
 		}
 		public static function loginUser($username, $password){
 
 			$conn = db_connect();
-			$id = 
+			
 			$username = sanitize($conn, $username);
 			$password = sanitize($conn, $password);
 
@@ -79,13 +99,12 @@
 			}
 		}
 
-		public function getPoints(){
-			return $this->points;
-		}
 
-		public function incrementPoints(){
-			$this->points = $this->points+1;
-			$this->update();
+		public function getStudentId(){
+			return $this->studentid;
+		}
+		public function getTeacherId(){
+			return $this->teacherid;
 		}
 
 		public function update(){
