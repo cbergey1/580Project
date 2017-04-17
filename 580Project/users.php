@@ -33,9 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
 			echo json_encode($response); 
 			exit();
 		}else{
-			$userObject = Users::getUserById($_SESSION['user_id']);
+			$userObject = User::getUserById($_SESSION['user_id']);
+			$studentObject = Student::getStudentById($userObject->getStudentId());
 			$response['success'] = true;
-			$userObject->incrementPoints();
+			$studentObject->incrementPoints();
 			exit();
 		}
 	}
@@ -56,14 +57,20 @@ else if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
 			if (empty($username) || empty($password)){
 				$response['message'] = "Please enter a valid username and password.";
+				echo json_encode($response);
+				exit();
 			}
 			 else if (Users::user_exists($username) === false){
 				$response['message'] = "Invalid username.";
+				echo json_encode($response);
+				exit();
 			}
 			else{
 				$loginSuccess = Users::loginUser($username, $password);
 				if($loginSuccess == false){
 					$response['message'] = "Invalid combination.";
+					echo json_encode($response);
+					exit();
 				}else{
 					$_SESSION["user_id"] = $loginSuccess; //sets the user's session id with the user's database id
 					$response['message'] = "Success";
@@ -79,7 +86,12 @@ else if ($_SERVER['REQUEST_METHOD'] == "POST") {
 			exit();
 		}
 	}else if(count($path_components) == 2 && $path_components[1]=="register"){
-		if($_POST['password'] != $_POST['confirmpassword']){
+		if(empty($_POST['username']) || empty($_POST['password'])){
+			$response['message'] = "Fields must not be empty";
+			echo json_encode($response); 
+			exit();
+		}
+		else if($_POST['password'] != $_POST['confirmpassword']){
 			$response['message'] = "Passwords do not match";
 			echo json_encode($response); 
 			exit();
@@ -87,14 +99,26 @@ else if ($_SERVER['REQUEST_METHOD'] == "POST") {
 			$response['message'] = "Username is already taken";
 			echo json_encode($response); 
 			exit();
+		}else if(empty($_POST['accounttype'])){
+			$response['message'] = "Error";
+			echo json_encode($response); 
+			exit();
+		}else if($_POST['accounttype'] == "student" && empty($_POST['accesscode'])){
+			$response['message'] = "You must provide an access code";
+			echo json_encode($response); 
+			exit();
+		}else if((Teacher::accessCodeExists($_POST['accesscode']) == false) && ($_POST['accounttype'] == "student")){
+			$response['message'] = "Invalid access code";
+			echo json_encode($response); 
+			exit();
 		}else{
-			$result = Users::registerUser($_POST['username'], $_POST['password']);
+			$result = Users::registerUser($_POST['username'], $_POST['password'], $_POST['accounttype'], $_POST['accesscode']);
 			if($result == true){
 				$response['message'] = "Success.";
 				echo json_encode($response); 
 			exit();
 			}else{
-				$response['message'] = "Failure";
+				$response['message'] = "$result";
 				echo json_encode($response); 
 				exit();
 			}
