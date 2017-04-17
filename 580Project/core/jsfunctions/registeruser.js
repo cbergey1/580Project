@@ -6,9 +6,29 @@ $(document).on('click', '#registernav', function(){
     $('#confirm').val("");
     $('#user').val("");
     $('#pass').val("");
+    $('#accounttype').val("");
+
+    $('#registerformdiv').hide();
+    $('#registerinitial').show();
+});
+$(document).on('click', '#registerinitialstudent', function(){
+    $('#registerformdiv').show();
+    $('#registerinitial').hide();
+    $('.student-only-form').show();
+    $('.teacher-only-form').hide();
+    $('#accounttype').val("student");
+});
+$(document).on('click', '#registerinitialteacher', function(){
+    $('#registerformdiv').show();
+    $('#registerinitial').hide();
+    $('.student-only-form').hide();
+    $('.teacher-only-form').show();
+    $('#accounttype').val("teacher");
 });
 $(document).on('click', '#registersubmit', function(){
 	$('#registersubmit').attr("disabled", true);
+    $('#regdialog').empty();
+    $('#regdialog').removeClass();
 	$.ajax({
         type: "POST",
         url: "users.php/register",
