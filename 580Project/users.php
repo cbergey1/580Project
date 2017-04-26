@@ -26,18 +26,77 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
 			echo json_encode($response); 
 			exit();
 		}
-	}else if(count($path_components) == 2 && $path_components[1]=="pointsinc"){
+	}else if(count($path_components) == 2 && $path_components[1]=="activity"){
+		
+		$activity = $_GET["activity"];
+		$errors = $_GET["errors"];
+		$user = Users::getUserById($_SESSION['user_id']);
+		//check to make sure logged in user is a student
+		$studentid = $user->getStudentId();
+		if($studentid == 0){
+			$response['success'] = false;
+			echo json_encode($response); 
+			exit();
+		}
+
+		//else, get student object
+		$student = Student::getStudentById($studentid);
+		$success = $student->updateActivityScore($activity, $errors); //returns true/false based on success of update
+
+		$response['success'] = $success;
+		echo json_encode($response); 
+		exit();
+
+
+	}else if(count($path_components) == 2 && $path_components[1]=="studentscores"){
 		if(!isset($_SESSION['user_id'])){
 			$response['success'] = false;
 			$response['message'] = "User not logged in";
 			echo json_encode($response); 
 			exit();
 		}else{
-			$userObject = User::getUserById($_SESSION['user_id']);
-			$studentObject = Student::getStudentById($userObject->getStudentId());
+			$userObject = Users::getUserById($_SESSION['user_id']);
+			$teacherId = $userObject->getTeacherId();
+			//check to see if user is a teacher
+			if($teacherId == 0){
+				$response['success'] = false;
+				$response['message'] = "User is not a teacher";
+				echo json_encode($response); 
+				exit();
+			}
+			//else, create 2D array of teacher's students and their scores on activities
+
+			$teacherObject = Teacher::getTeacherById($teacherId);
+
+			//csv of student ids (with zero as first value)
+			$studentIdList = $teacherObject->getStudents();
+			$studentIdArray = explode(',', $studentIdList);
+
+			$studentScoreInfo = array();
+
+			foreach($studentIdArray as $studentId){
+				$scoreArray = array();
+
+				if($studentId != 0){ //excludes the starting zero
+					$studentObject = Student::getStudentById($studentId);
+					$scoreArray['studentid'] = $studentObject->getName();
+					$scoreArray['countvert'] = $studentObject->getCountVert();
+					$scoreArray['countshape'] = $studentObject->getCountShape();
+					$scoreArray['simpleadd'] = $studentObject->getSimpleAdd();
+					$scoreArray['simplesub'] = $studentObject->getSimpleSub();
+					$scoreArray['simplespell'] = $studentObject->getSimpleSpell();
+					$scoreArray['simplerhyme'] = $studentObject->getSimpleRhyme();
+
+					array_push($studentScoreInfo, $scoreArray);
+				}
+				
+			}
+
 			$response['success'] = true;
-			$studentObject->incrementPoints();
+			$response['scores'] = $studentScoreInfo;
+			echo json_encode($response); 
 			exit();
+
 		}
 	}
 
@@ -112,7 +171,7 @@ else if ($_SERVER['REQUEST_METHOD'] == "POST") {
 			echo json_encode($response); 
 			exit();
 		}else{
-			$result = Users::registerUser($_POST['username'], $_POST['password'], $_POST['accounttype'], $_POST['accesscode']);
+			$result = Users::registerUser($_POST['username'], $_POST['password'], $_POST['accounttype'], $_POST['accesscode'], $_POST['firstname']);
 			if($result == true){
 				$response['message'] = "Success.";
 				echo json_encode($response); 
