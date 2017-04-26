@@ -3,10 +3,12 @@ $(document).on('click', '#registernav', function(){
     $('#regdialog').empty();
     $('#regdialog').removeClass();
     $('#password').val("");
+    $('#firstname').val("");
     $('#confirm').val("");
     $('#user').val("");
     $('#pass').val("");
     $('#accounttype').val("");
+    $('#accesscode').val("");
 
     $('#registerformdiv').hide();
     $('#registerinitial').show();
