@@ -32,17 +32,18 @@
 				return false;
 			}
 		}
-		public static function registerUser($username, $password, $accounttype, $accesscode){
+		public static function registerUser($username, $password, $accounttype, $accesscode, $firstname){
 			$conn = db_connect();
 
 			$username = sanitize($conn, $username);
 			$password = sanitize($conn, $password);
 			$accounttype = sanitize($conn, $accounttype);
 			$accesscode = sanitize($conn, $accesscode);
+			$firstname = sanitize($conn, $firstname);
 
 			if($accounttype == "student"){
 				$teacher = Teacher::getIdByAccessCode($accesscode);
-				$studentid = Student::registerStudent($teacher->getId());
+				$studentid = Student::registerStudent($teacher->getId(), $firstname);
 
 				$q = "INSERT INTO Users (id, username, password, studentid, teacherid) VALUES (NULL, '$username', '$password', '$studentid', 0);";
 				$result = $conn->query($q);
@@ -67,7 +68,7 @@
 	  		$result = $conn->query($q);
 	  		$data = $result->fetch_assoc();
 
-	  		return new Users($data['id'], $data['username'], $data['password'], $data['studentid'], $data['studentid']);
+	  		return new Users($data['id'], $data['username'], $data['password'], $data['studentid'], $data['teacherid']);
 		}
 		public static function loginUser($username, $password){
 
@@ -97,6 +98,19 @@
 			}else{
 				return false;
 			}
+		}
+		public static function isTeacher(){
+			$conn = db_connect();
+			$id = $_SESSION['user_id'];
+	  		//finds user in users table
+	  		$q = "SELECT * FROM users WHERE id='$id' limit 1";
+	  		$result = $conn->query($q);
+	  		$data = $result->fetch_assoc();
+	  		if($data['teacherid'] == 0){
+	  			return false;
+	  		}else{
+	  			return true;
+	  		}
 		}
 
 
