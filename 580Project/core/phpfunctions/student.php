@@ -60,32 +60,50 @@
 
 	  		switch($activity){
 	  			case "countvert":
-	  				$this->countvert = $errors;
+	  				$string = $this->countvert;
+	  				$array = explode(',', $string);
+	  				$array[0] = $errors;
+	  				$this->countvert = $array[0].','.$array[1];
 	  				$this->update();
 	  				return true;
 	  				break;
 	  			case "countshape":
-	  				$this->countshape = $errors;
+	  				$string = $this->countshape;
+	  				$array = explode(',', $string);
+	  				$array[0] = $errors;
+	  				$this->countshape = $array[0].','.$array[1];
 	  				$this->update();
 	  				return true;
 	  				break;
 	  			case "simpleadd":
-	  				$this->simpleadd = $errors;
+	  				$string = $this->simpleadd;
+	  				$array = explode(',', $string);
+	  				$array[0] = $errors;
+	  				$this->simpleadd = $array[0].','.$array[1];
 	  				$this->update();
 	  				return true;
 	  				break;
 	  			case "simplesub":
-	  				$this->simplesub = $errors;
+	  				$string = $this->simpleadd;
+	  				$array = explode(',', $string);
+	  				$array[0] = $errors;
+	  				$this->simpleadd = $array[0].','.$array[1];
 	  				$this->update();
 	  				return true;
 	  				break;
 	  			case "simplespell":
-	  				$this->simplespell = $errors;
+	  				$string = $this->simpleadd;
+	  				$array = explode(',', $string);
+	  				$array[0] = $errors;
+	  				$this->simpleadd = $array[0].','.$array[1];
 	  				$this->update();
 	  				return true;
 	  				break;
 	  			case "simplerhyme":
-	  				$this->simplerhyme = $errors;
+	  				$string = $this->simpleadd;
+	  				$array = explode(',', $string);
+	  				$array[0] = $errors;
+	  				$this->simpleadd = $array[0].','.$array[1];
 	  				$this->update();
 	  				return true;
 	  				break;
@@ -95,29 +113,118 @@
 	  		}
 
 	  	}
+	  	public function updateActivityCorrect($activity, $correct){
+	  		$conn = db_connect();
+	  		$activity = sanitize($conn, $activity);
+	  		$correct = sanitize($conn, $correct);
+
+	  		switch($activity){
+	  			case "countvert":
+	  				$string = $this->countvert;
+	  				$array = explode(',', $string);
+	  				$array[1] = $correct;
+	  				$this->countvert = $array[0].','.$array[1];
+	  				$this->update();
+	  				return true;
+	  				break;
+	  			case "countshape":
+	  				$string = $this->countshape;
+	  				$array = explode(',', $string);
+	  				$array[1] = $correct;
+	  				$this->countshape = $array[0].','.$array[1];
+	  				$this->update();
+	  				return true;
+	  				break;
+	  			case "simpleadd":
+	  				$string = $this->simpleadd;
+	  				$array = explode(',', $string);
+	  				$array[1] = $correct;
+	  				$this->simpleadd = $array[0].','.$array[1];
+	  				$this->update();
+	  				return true;
+	  				break;
+	  			case "simplesub":
+	  				$string = $this->simpleadd;
+	  				$array = explode(',', $string);
+	  				$array[1] = $correct;
+	  				$this->simpleadd = $array[0].','.$array[1];
+	  				$this->update();
+	  				return true;
+	  				break;
+	  			case "simplespell":
+	  				$string = $this->simpleadd;
+	  				$array = explode(',', $string);
+	  				$array[1] = $correct;
+	  				$this->simpleadd = $array[0].','.$array[1];
+	  				$this->update();
+	  				return true;
+	  				break;
+	  			case "simplerhyme":
+	  				$string = $this->simpleadd;
+	  				$array = explode(',', $string);
+	  				$array[1] = $correct;
+	  				$this->simpleadd = $array[0].','.$array[1];
+	  				$this->update();
+	  				return true;
+	  				break;
+
+	  			default:
+	  				return false;
+	  		}
+	  	}
 	  	public function getName(){
 	  		return $this->name;
 	  	}
 	  	public function getId(){
 	  		return $this->id;
 	  	}
-	  	public function getCountVert(){
-	  		return $this->countvert;
+	  	public function getCountVertCorrect(){
+	  		$array = explode(',', $this->countvert);
+	  		return $array[1];
 	  	}
-	  	public function getCountShape(){
-	  		return $this->countshape;
+	  	public function getCountShapeCorrect(){
+	  		$array = explode(',', $this->countshape);
+	  		return $array[1];
 	  	}
-	  	public function getSimpleAdd(){
-	  		return $this->simpleadd;
+	  	public function getSimpleAddCorrect(){
+	  		$array = explode(',', $this->simpleadd);
+	  		return $array[1];
 	  	}
-	  	public function getSimpleSub(){
-	  		return $this->simplesub;
+	  	public function getSimpleSubCorrect(){
+	  		$array = explode(',', $this->simplesub);
+	  		return $array[1];
 	  	}
-	  	public function getSimpleSpell(){
-	  		return $this->simplespell;
+	  	public function getSimpleSpellCorrect(){
+	  		$array = explode(',', $this->simplespell);
+	  		return $array[1];
 	  	}
-	  	public function getSimpleRhyme(){
-	  		return $this->simplerhyme;
+	  	public function getSimpleRhymeCorrect(){
+	  		$array = explode(',', $this->simplerhyme);
+	  		return $array[1];
+	  	}
+	  	public function getCountVertErrors(){
+	  		$array = explode(',', $this->countvert);
+	  		return $array[0];
+	  	}
+	  	public function getCountShapeErrors(){
+	  		$array = explode(',', $this->countshape);
+	  		return $array[0];
+	  	}
+	  	public function getSimpleAddErrors(){
+	  		$array = explode(',', $this->simpleadd);
+	  		return $array[0];
+	  	}
+	  	public function getSimpleSubErrors(){
+	  		$array = explode(',', $this->simplesub);
+	  		return $array[0];
+	  	}
+	  	public function getSimpleSpellErrors(){
+	  		$array = explode(',', $this->simplespell);
+	  		return $array[0];
+	  	}
+	  	public function getSimpleRhymeErrors(){
+	  		$array = explode(',', $this->simplerhyme);
+	  		return $array[0];
 	  	}
 
 	  	public function getAccountType(){
