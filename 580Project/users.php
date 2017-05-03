@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
 		exit();
 
 
-	}else if(count($path_components) == 2 && $path_components[1]=="studentscores"){
+	}else if(count($path_components) == 2 && $path_components[1]=="studenterrorscores"){
 		if(!isset($_SESSION['user_id'])){
 			$response['success'] = false;
 			$response['message'] = "User not logged in";
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
 				echo json_encode($response); 
 				exit();
 			}
-			//else, create 2D array of teacher's students and their scores on activities
+			//else, create 2D array of teacher's students and their error-scores on activities
 
 			$teacherObject = Teacher::getTeacherById($teacherId);
 
@@ -80,12 +80,12 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
 				if($studentId != 0){ //excludes the starting zero
 					$studentObject = Student::getStudentById($studentId);
 					$scoreArray['studentid'] = $studentObject->getName();
-					$scoreArray['countvert'] = $studentObject->getCountVert();
-					$scoreArray['countshape'] = $studentObject->getCountShape();
-					$scoreArray['simpleadd'] = $studentObject->getSimpleAdd();
-					$scoreArray['simplesub'] = $studentObject->getSimpleSub();
-					$scoreArray['simplespell'] = $studentObject->getSimpleSpell();
-					$scoreArray['simplerhyme'] = $studentObject->getSimpleRhyme();
+					$scoreArray['countvert'] = $studentObject->getCountVertErrors();
+					$scoreArray['countshape'] = $studentObject->getCountShapeErrors();
+					$scoreArray['simpleadd'] = $studentObject->getSimpleAddErrors();
+					$scoreArray['simplesub'] = $studentObject->getSimpleSubErrors();
+					$scoreArray['simplespell'] = $studentObject->getSimpleSpellErrors();
+					$scoreArray['simplerhyme'] = $studentObject->getSimpleRhymeErrors();
 
 					array_push($studentScoreInfo, $scoreArray);
 				}
@@ -97,6 +97,35 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
 			echo json_encode($response); 
 			exit();
 
+		}
+	}else if(count($path_components) == 2 && $path_components[1]=="studentcorrectscores"){
+		if(!isset($_SESSION['user_id'])){
+			$response['success'] = false;
+			$response['message'] = "User not logged in";
+			echo json_encode($response); 
+			exit();
+		}else{
+			$userObject = Users::getUserById($_SESSION['user_id']);
+			$studentId = $userObject->getStudentId();
+			if($studentId == 0){
+				$response['success'] = false;
+				$response['message'] = "User is not a student";
+				echo json_encode($response); 
+				exit();
+			}
+
+			$studentObject = Student::getStudentById($studentId);
+
+			$response['success'] = true;
+			$response['countvert'] = $studentObject->getCountVertCorrect();
+			$response['countshape'] = $studentObject->getCountShapeCorrect();
+			$response['simpleadd'] = $studentObject->getSimpleAddCorrect();
+			$response['simplesub'] = $studentObject->getSimpleSubCorrect();
+			$response['simplespell'] = $studentObject->getSimpleSpellCorrect();
+			$response['simplerhyme'] = $studentObject->getSimpleRhymeCorrect();
+
+			echo json_encode($response); 
+			exit();
 		}
 	}
 
