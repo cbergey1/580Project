@@ -81,43 +81,58 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
 			$teacherId = $userObject->getTeacherId();
 			//check to see if user is a teacher
 			if($teacherId == 0){
-				$response['success'] = false;
-				$response['message'] = "User is not a teacher";
+				//call for a student
+				$studentObject = Student::getStudentById($userObject->getStudentId());
+
+				$response['countvert'] = $studentObject->getCountVertErrors();
+				$response['countshape'] = $studentObject->getCountShapeErrors();
+				$response['simpleadd'] = $studentObject->getSimpleAddErrors();
+				$response['simplesub'] = $studentObject->getSimpleSubErrors();
+				$response['simplespell'] = $studentObject->getSimpleSpellErrors();
+				$response['simplerhyme'] = $studentObject->getSimpleRhymeErrors();
+
+				$response['success'] = true;
+
+
+				//returns 1D array with keys as the activity names
+				echo json_encode($response); 
+				exit();
+			}else{
+				//is a teacher
+				$teacherObject = Teacher::getTeacherById($teacherId);
+
+				//csv of student ids (with zero as first value)
+				$studentIdList = $teacherObject->getStudents();
+				$studentIdArray = explode(',', $studentIdList);
+
+				$studentScoreInfo = array();
+
+				foreach($studentIdArray as $studentId){
+					$scoreArray = array();
+
+					if($studentId != 0){ //excludes the starting zero
+						$studentObject = Student::getStudentById($studentId);
+						$scoreArray['studentid'] = $studentObject->getName();
+						$scoreArray['countvert'] = $studentObject->getCountVertErrors();
+						$scoreArray['countshape'] = $studentObject->getCountShapeErrors();
+						$scoreArray['simpleadd'] = $studentObject->getSimpleAddErrors();
+						$scoreArray['simplesub'] = $studentObject->getSimpleSubErrors();
+						$scoreArray['simplespell'] = $studentObject->getSimpleSpellErrors();
+						$scoreArray['simplerhyme'] = $studentObject->getSimpleRhymeErrors();
+
+						array_push($studentScoreInfo, $scoreArray);
+					}
+					
+				}
+
+				$response['success'] = true;
+				$response['scores'] = $studentScoreInfo;
 				echo json_encode($response); 
 				exit();
 			}
 			//else, create 2D array of teacher's students and their error-scores on activities
 
-			$teacherObject = Teacher::getTeacherById($teacherId);
-
-			//csv of student ids (with zero as first value)
-			$studentIdList = $teacherObject->getStudents();
-			$studentIdArray = explode(',', $studentIdList);
-
-			$studentScoreInfo = array();
-
-			foreach($studentIdArray as $studentId){
-				$scoreArray = array();
-
-				if($studentId != 0){ //excludes the starting zero
-					$studentObject = Student::getStudentById($studentId);
-					$scoreArray['studentid'] = $studentObject->getName();
-					$scoreArray['countvert'] = $studentObject->getCountVertErrors();
-					$scoreArray['countshape'] = $studentObject->getCountShapeErrors();
-					$scoreArray['simpleadd'] = $studentObject->getSimpleAddErrors();
-					$scoreArray['simplesub'] = $studentObject->getSimpleSubErrors();
-					$scoreArray['simplespell'] = $studentObject->getSimpleSpellErrors();
-					$scoreArray['simplerhyme'] = $studentObject->getSimpleRhymeErrors();
-
-					array_push($studentScoreInfo, $scoreArray);
-				}
-				
-			}
-
-			$response['success'] = true;
-			$response['scores'] = $studentScoreInfo;
-			echo json_encode($response); 
-			exit();
+			
 
 		}
 	}else if(count($path_components) == 2 && $path_components[1]=="studentcorrectscores"){
