@@ -1,132 +1,246 @@
-<?php 
+<?php
+include 'core/init.php';
 
-	class Users{
-		private $id;
-		private $password;
-		private $username;
-		private $studentid;
-		private $teacherid;
+//this is a file that represents the "Users API"
+$path_components = explode('/', $_SERVER['PATH_INFO']);
 
-		public function __construct($id, $password, $username, $studentid, $teacherid) {
-		    $this->id = $id;
-		    $this->password = $password;
-		    $this->username = $username;
-		    $this->studentid = $studentid;
-		    $this->teacherid = $teacherid;
-		    
-	  	}
-
-		public static function user_exists($username){
-
-			$conn = db_connect();
-			$username = sanitize($conn, $username);
-
-			//query database here to test for username
-			$q = "SELECT id FROM Users WHERE username = '$username'";
-
-			$result = $conn->query($q);
-
-			if ($result->num_rows > 0) {
-				return true;
-			}else{
-				return false;
-			}
-		}
-		public static function registerUser($username, $password, $accounttype, $accesscode, $firstname){
-			$conn = db_connect();
-
-			$username = sanitize($conn, $username);
-			$password = sanitize($conn, $password);
-			$accounttype = sanitize($conn, $accounttype);
-			$accesscode = sanitize($conn, $accesscode);
-			$firstname = sanitize($conn, $firstname);
-
-			if($accounttype == "student"){
-				$teacher = Teacher::getIdByAccessCode($accesscode);
-				$studentid = Student::registerStudent($teacher->getId(), $firstname);
-
-				$q = "INSERT INTO Users (id, username, password, studentid, teacherid) VALUES (NULL, '$username', '$password', '$studentid', 0);";
-				$result = $conn->query($q);
-				return $result;
-			}else if($accounttype == "teacher"){
-
-				$teacherid = Teacher::registerTeacher();
-
-				$q = "INSERT INTO Users (id, username, password, studentid, teacherid) VALUES (NULL, '$username', '$password', 0, '$teacherid');";
-				$result = $conn->query($q);
-				return $result;
-			}else{
-				return false;
-			}
-			
-		}
-		public static function getUserById($id){
-			$conn = db_connect();
-
-	  		//finds user in users table
-	  		$q = "SELECT * FROM users WHERE id='$id' limit 1";
-	  		$result = $conn->query($q);
-	  		$data = $result->fetch_assoc();
-
-	  		return new Users($data['id'], $data['username'], $data['password'], $data['studentid'], $data['teacherid']);
-		}
-		public static function loginUser($username, $password){
-
-			$conn = db_connect();
-			
-			$username = sanitize($conn, $username);
-			$password = sanitize($conn, $password);
-
-			//query database here to test for the correct username and password, if the username and password are correct, return the User's ID in the database to be used as the Session ID.
-			$q = "SELECT id FROM Users WHERE username = '$username' AND password = '$password'";
-
-			$result = $conn->query($q);
-			$row = $result->fetch_assoc();
-
-			if ($result->num_rows > 0) {
-				
-				return $row['id'];
-
-			}else{
-				return false;
-			}
-		}
+/*
+==========================================
+		BEGIN USERS GET
+==========================================
+*/
+if ($_SERVER['REQUEST_METHOD'] == "GET") {
+	$response = array();
+	if(count($path_components) == 2 && $path_components[1]=="login"){
 		
-		public static function isLoggedIn(){
-			if ($_SESSION['user_id'] !== null){
-				return true;
-			}else{
-				return false;
+	}else if(count($path_components) == 2 && $path_components[1]=="points"){
+		if(!isset($_SESSION['user_id'])){
+			$response['success'] = false;
+			$response['message'] = "User not logged in";
+			echo json_encode($response); 
+			exit();
+		}else{
+			$userObject = getUserById($_SESSION['user_id']);
+			$response['success'] = true;
+			$response['message'] = $userObject->getPoints();
+			echo json_encode($response); 
+			exit();
+		}
+	}else if(count($path_components) == 2 && $path_components[1]=="activity"){
+		
+		$activity = $_GET["activity"];
+		$errors = $_GET["errors"];
+		$user = Users::getUserById($_SESSION['user_id']);
+		//check to make sure logged in user is a student
+		$studentid = $user->getStudentId();
+		if($studentid == 0){
+			$response['success'] = false;
+			echo json_encode($response); 
+			exit();
+		}
+
+		//else, get student object
+		$student = Student::getStudentById($studentid);
+		$success = $student->updateActivityScore($activity, $errors); //returns true/false based on success of update
+
+		$response['success'] = $success;
+		echo json_encode($response); 
+		exit();
+
+
+	}else if(count($path_components) == 2 && $path_components[1]=="correct"){
+		
+		$activity = $_GET["activity"];
+		$errors = $_GET["correct"];
+		$user = Users::getUserById($_SESSION['user_id']);
+		//check to make sure logged in user is a student
+		$studentid = $user->getStudentId();
+		if($studentid == 0){
+			$response['success'] = false;
+			echo json_encode($response); 
+			exit();
+		}
+
+		//else, get student object
+		$student = Student::getStudentById($studentid);
+		$success = $student->updateActivityCorrect($activity, $errors); //returns true/false based on success of update
+
+		$response['success'] = $success;
+		echo json_encode($response); 
+		exit();
+
+
+	}else if(count($path_components) == 2 && $path_components[1]=="studenterrorscores"){
+		if(!isset($_SESSION['user_id'])){
+			$response['success'] = false;
+			$response['message'] = "User not logged in";
+			echo json_encode($response); 
+			exit();
+		}else{
+			$userObject = Users::getUserById($_SESSION['user_id']);
+			$teacherId = $userObject->getTeacherId();
+			//check to see if user is a teacher
+			if($teacherId == 0){
+				$response['success'] = false;
+				$response['message'] = "User is not a teacher";
+				echo json_encode($response); 
+				exit();
 			}
-		}
-		public static function isTeacher(){
-			$conn = db_connect();
-			$id = $_SESSION['user_id'];
-	  		//finds user in users table
-	  		$q = "SELECT * FROM users WHERE id='$id' limit 1";
-	  		$result = $conn->query($q);
-	  		$data = $result->fetch_assoc();
-	  		if($data['teacherid'] == 0){
-	  			return false;
-	  		}else{
-	  			return true;
-	  		}
-		}
+			//else, create 2D array of teacher's students and their error-scores on activities
 
+			$teacherObject = Teacher::getTeacherById($teacherId);
 
-		public function getStudentId(){
-			return $this->studentid;
-		}
-		public function getTeacherId(){
-			return $this->teacherid;
-		}
+			//csv of student ids (with zero as first value)
+			$studentIdList = $teacherObject->getStudents();
+			$studentIdArray = explode(',', $studentIdList);
 
-		public function update(){
-			$conn = db_connect();
-			$q = "UPDATE Users SET id='" . $this->id . "', username ='" . $this->username . "', password ='" . $this->password . "', points ='" . $this->points . "' WHERE id = '" . $this->id . "'";
-			$result = $conn->query($q);
-			return $result;
+			$studentScoreInfo = array();
+
+			foreach($studentIdArray as $studentId){
+				$scoreArray = array();
+
+				if($studentId != 0){ //excludes the starting zero
+					$studentObject = Student::getStudentById($studentId);
+					$scoreArray['studentid'] = $studentObject->getName();
+					$scoreArray['countvert'] = $studentObject->getCountVertErrors();
+					$scoreArray['countshape'] = $studentObject->getCountShapeErrors();
+					$scoreArray['simpleadd'] = $studentObject->getSimpleAddErrors();
+					$scoreArray['simplesub'] = $studentObject->getSimpleSubErrors();
+					$scoreArray['simplespell'] = $studentObject->getSimpleSpellErrors();
+					$scoreArray['simplerhyme'] = $studentObject->getSimpleRhymeErrors();
+
+					array_push($studentScoreInfo, $scoreArray);
+				}
+				
+			}
+
+			$response['success'] = true;
+			$response['scores'] = $studentScoreInfo;
+			echo json_encode($response); 
+			exit();
+
+		}
+	}else if(count($path_components) == 2 && $path_components[1]=="studentcorrectscores"){
+		if(!isset($_SESSION['user_id'])){
+			$response['success'] = false;
+			$response['message'] = "User not logged in";
+			echo json_encode($response); 
+			exit();
+		}else{
+			$userObject = Users::getUserById($_SESSION['user_id']);
+			$studentId = $userObject->getStudentId();
+			if($studentId == 0){
+				$response['success'] = false;
+				$response['message'] = "User is not a student";
+				echo json_encode($response); 
+				exit();
+			}
+
+			$studentObject = Student::getStudentById($studentId);
+
+			$response['success'] = true;
+			$response['countvert'] = $studentObject->getCountVertCorrect();
+			$response['countshape'] = $studentObject->getCountShapeCorrect();
+			$response['simpleadd'] = $studentObject->getSimpleAddCorrect();
+			$response['simplesub'] = $studentObject->getSimpleSubCorrect();
+			$response['simplespell'] = $studentObject->getSimpleSpellCorrect();
+			$response['simplerhyme'] = $studentObject->getSimpleRhymeCorrect();
+
+			echo json_encode($response); 
+			exit();
 		}
 	}
 
+}
+/*
+==========================================
+		BEGIN USERS POST
+==========================================
+*/
+else if ($_SERVER['REQUEST_METHOD'] == "POST") {
+	$response = array();
+	if(count($path_components) == 2 && $path_components[1]=="login"){
+		if(empty($_POST) === false){
+			$username = $_POST['username'];
+			$password = $_POST['password'];
+			$response = array();
+
+			if (empty($username) || empty($password)){
+				$response['message'] = "Please enter a valid username and password.";
+				echo json_encode($response);
+				exit();
+			}
+			 else if (Users::user_exists($username) === false){
+				$response['message'] = "Invalid username.";
+				echo json_encode($response);
+				exit();
+			}
+			else{
+				$loginSuccess = Users::loginUser($username, $password);
+				if($loginSuccess == false){
+					$response['message'] = "Invalid combination.";
+					echo json_encode($response);
+					exit();
+				}else{
+					$_SESSION["user_id"] = $loginSuccess; //sets the user's session id with the user's database id
+					$response['message'] = "Success";
+					echo json_encode($response);
+					exit();
+				}
+			}
+			echo json_encode($response); // goes to loginAJAX.js in core/jsfunctions folder
+			exit();
+		}else{
+			$response['message'] = "Failure.";
+			echo json_encode($response); 
+			exit();
+		}
+	}else if(count($path_components) == 2 && $path_components[1]=="register"){
+		if(empty($_POST['username']) || empty($_POST['password'])){
+			$response['message'] = "Fields must not be empty";
+			echo json_encode($response); 
+			exit();
+		}
+		else if($_POST['password'] != $_POST['confirmpassword']){
+			$response['message'] = "Passwords do not match";
+			echo json_encode($response); 
+			exit();
+		}else if(Users::user_exists($_POST['username'])){
+			$response['message'] = "Username is already taken";
+			echo json_encode($response); 
+			exit();
+		}else if(empty($_POST['accounttype'])){
+			$response['message'] = "Error";
+			echo json_encode($response); 
+			exit();
+		}else if($_POST['accounttype'] == "student" && empty($_POST['accesscode'])){
+			$response['message'] = "You must provide an access code";
+			echo json_encode($response); 
+			exit();
+		}else if((Teacher::accessCodeExists($_POST['accesscode']) == false) && ($_POST['accounttype'] == "student")){
+			$response['message'] = "Invalid access code";
+			echo json_encode($response); 
+			exit();
+		}else{
+			$result = Users::registerUser($_POST['username'], $_POST['password'], $_POST['accounttype'], $_POST['accesscode'], $_POST['firstname']);
+			if($result == true){
+				$response['message'] = "Success.";
+				echo json_encode($response); 
+			exit();
+			}else{
+				$response['message'] = "$result";
+				echo json_encode($response); 
+				exit();
+			}
+		}
+	}
+	if(count($path_components) == 2 && $path_components[1] == "logout"){
+		if(empty($_POST) == false){
+			$username = $_POST['username'];
+			$password = $_POST['password'];
+			$response = array();
+			
+		}
+	}
+}
 ?>
